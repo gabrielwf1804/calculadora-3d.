@@ -75,6 +75,10 @@
             background: #374151;
         }
     </style>
+   
+    <!-- Conexão com o PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#06b6d4">
 </head>
 <body class="min-h-screen pb-12 text-slate-200 selection:bg-cyan-500 selection:text-black">
 
@@ -413,7 +417,13 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             lucide.createIcons();
-        });
+        }); if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado com sucesso!', reg))
+                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
+            });
+        }
 
         const lobbyScreen = document.getElementById('lobbyScreen');
         const appScreen = document.getElementById('appScreen');
