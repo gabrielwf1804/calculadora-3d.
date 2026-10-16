@@ -1,0 +1,22 @@
+{
+  "name": "3D PrintCalc Pro",
+  "short_name": "PrintCalc 3D",
+  "description": "Calculadora de Precificação e Custos para Impressão 3D",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5738/5738077.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5738/5738077.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
