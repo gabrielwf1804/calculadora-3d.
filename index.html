@@ -506,20 +506,19 @@
         </div>
     </div>
 
-    <!-- FIREBASE SDKs (Versão Modular v10) -->
+    <!-- FIREBASE SDKs (Versão Modular v10 com as tuas chaves aplicadas) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Substitua abaixo com as suas credenciais reais do Firebase
         const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_AUTH_DOMAIN",
+            apiKey: "AIzaSyD-efUhhxdVTGVJGYVcVjyFYF4EEewkJM",
+            authDomain: "calculadora3d-pro.firebaseapp.com",
             projectId: "calculadora3d-pro",
-            storageBucket: "SEU_STORAGE_BUCKET",
-            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-            appId: "SEU_APP_ID"
+            storageBucket: "calculadora3d-pro.firebasestorage.app",
+            messagingSenderId: "1036847414327",
+            appId: "1:1036847414327:web:5c1aba86d44e117252d3b2"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -599,7 +598,7 @@
                     if (userSnap.exists() && userSnap.data().isPro === true) {
                         proLockedCard.classList.add('hidden');
                         proUnlockedCard.classList.remove('hidden');
-                        document.getElementById('proHeaderBtninnerHTML = `<i data-lucide="crown" class="w-4 h-4"></i> <span>PRO Ativo ⭐</span>`;
+                        document.getElementById('proHeaderBtn').innerHTML = `<i data-lucide="crown" class="w-4 h-4"></i> <span>PRO Ativo ⭐</span>`;
                         console.log("Acesso PRO detetado via UID!");
                     } else {
                         proLockedCard.classList.remove('hidden');
