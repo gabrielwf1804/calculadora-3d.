@@ -498,310 +498,230 @@
                     <i data-lucide="user-check" class="w-8 h-8"></i>
                 </div>
                 <div>
-                    <h3 id="userDisplayEmail" class="text-sm font-bold text-white">usuario@email.com</h3>
-                    <p id="userDisplayStatus" class="text-xs text-slate-400 mt-0.5">Plano: Gratuito</p>
+                    <h3 id="loggedInUserEmail" class="text-sm font-bold text-white"></h3>
+                    <p class="text-xs text-slate-400 mt-1">Conta conectada com sucesso</p>
                 </div>
-                <button onclick="handleLogout()" class="w-full py-2 bg-slate-800 hover:bg-red-950/50 hover:text-red-400 text-slate-300 font-semibold text-xs rounded-xl border border-slate-700 transition cursor-pointer">
-                    Sair da Conta
-                </button>
+                <div id="logoutBtnContainer"></div>
             </div>
         </div>
     </div>
 
-    <!-- FIREBASE SDKs -->
+    <!-- FIREBASE SDKs (Versão Modular v10) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Substitua abaixo com as suas credenciais reais do Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyD-efUhhxdVTGVJGYVgVcvjFYF4EEewkJM",
-            authDomain: "calculadora3d-pro.firebaseapp.com",
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_AUTH_DOMAIN",
             projectId: "calculadora3d-pro",
-            storageBucket: "calculadora3d-pro.firebasestorage.app",
-            messagingSenderId: "1036847414327",
-            appId: "1:1036847414327:web:5c1aba86d44e117252d3b2",
-            measurementId: "G-YFL4WSXC4T"
+            storageBucket: "SEU_STORAGE_BUCKET",
+            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+            appId: "SEU_APP_ID"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.fbAuth = auth;
-        window.fbDb = db;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.signOut = signOut;
-        window.doc = doc;
-        window.getDoc = getDoc;
-        window.setDoc = setDoc;
+        window.openAuthModal = function() {
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        window.closeAuthModal = function() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        window.handleLogin = async function() {
+            const email = document.getElementById('authEmail').value;
+            const pass = document.getElementById('authPassword').value;
+            const errorEl = document.getElementById('authErrorMsg');
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                closeAuthModal();
+                showToast("Login efetuado com sucesso!");
+            } catch (error) {
+                errorEl.innerText = "Erro ao entrar: " + error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        window.handleRegister = async function() {
+            const email = document.getElementById('authEmail').value;
+            const pass = document.getElementById('authPassword').value;
+            const errorEl = document.getElementById('authErrorMsg');
+            
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                const user = userCredential.user;
+
+                await setDoc(doc(db, "users", user.uid), {
+                    email: user.email,
+                    isPro: false
+                });
+
+                closeAuthModal();
+                showToast("Conta criada com sucesso!");
+            } catch (error) {
+                errorEl.innerText = "Erro ao criar conta: " + error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        window.handleLogout = async function() {
+            await signOut(auth);
+            showToast("Você saiu da conta.");
+        }
 
         onAuthStateChanged(auth, async (user) => {
             const userAuthText = document.getElementById('userAuthText');
             const loggedOutView = document.getElementById('authLoggedOutView');
             const loggedInView = document.getElementById('authLoggedInView');
-            const userDisplayEmail = document.getElementById('userDisplayEmail');
-            const userDisplayStatus = document.getElementById('userDisplayStatus');
-            const lockedCard = document.getElementById('proLockedCard');
-            const unlockedCard = document.getElementById('proUnlockedCard');
+            const proLockedCard = document.getElementById('proLockedCard');
+            const proUnlockedCard = document.getElementById('proUnlockedCard');
 
             if (user) {
-                userAuthText.textContent = user.email.split('@')[0];
+                userAuthText.innerText = user.email;
+                document.getElementById('loggedInUserEmail').innerText = user.email;
                 loggedOutView.classList.add('hidden');
                 loggedInView.classList.remove('hidden');
-                userDisplayEmail.textContent = user.email;
+                
+                const logoutContainer = document.getElementById('logoutBtnContainer');
+                logoutContainer.innerHTML = `<button onclick="handleLogout()" class="w-full py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 font-bold text-xs rounded-xl transition cursor-pointer">Sair da Conta</button>`;
 
-                // Verificar status no Firestore
-                const userDocRef = doc(db, "users", user.uid);
-                const userDocSnap = await getDoc(userDocRef);
+                try {
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
 
-                let isPro = false;
-                if (userDocSnap.exists()) {
-                    isPro = userDocSnap.data().isPro === true;
-                } else {
-                    // Criar registro inicial do usuário
-                    await setDoc(userDocRef, { email: user.email, isPro: false, createdAt: new Date() });
+                    if (userSnap.exists() && userSnap.data().isPro === true) {
+                        proLockedCard.classList.add('hidden');
+                        proUnlockedCard.classList.remove('hidden');
+                        document.getElementById('proHeaderBtninnerHTML = `<i data-lucide="crown" class="w-4 h-4"></i> <span>PRO Ativo ⭐</span>`;
+                        console.log("Acesso PRO detetado via UID!");
+                    } else {
+                        proLockedCard.classList.remove('hidden');
+                        proUnlockedCard.classList.add('hidden');
+                    }
+                } catch (err) {
+                    console.error("Erro ao ler o Firestore:", err);
                 }
 
-                if (isPro) {
-                    userDisplayStatus.textContent = "Plano: PRO (Ativo ⭐)";
-                    userDisplayStatus.className = "text-xs text-amber-400 font-bold mt-0.5";
-                    lockedCard.classList.add('hidden');
-                    unlockedCard.classList.remove('hidden');
-                } else {
-                    userDisplayStatus.textContent = "Plano: Gratuito";
-                    userDisplayStatus.className = "text-xs text-slate-400 mt-0.5";
-                    lockedCard.classList.remove('hidden');
-                    unlockedCard.classList.add('hidden');
-                }
             } else {
-                userAuthText.textContent = "Entrar";
+                userAuthText.innerText = "Entrar";
                 loggedOutView.classList.remove('hidden');
                 loggedInView.classList.add('hidden');
-                lockedCard.classList.remove('hidden');
-                unlockedCard.classList.add('hidden');
+                proLockedCard.classList.remove('hidden');
+                proUnlockedCard.classList.add('hidden');
             }
-        });
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
             lucide.createIcons();
         });
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registrado com sucesso!', reg))
-                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
-            });
-        }
-
-        const lobbyScreen = document.getElementById('lobbyScreen');
-        const appScreen = document.getElementById('appScreen');
-
-        const inputs = {
-            projectName: document.getElementById('projectName'),
-            spoolPrice: document.getElementById('spoolPrice'),
-            spoolWeight: document.getElementById('spoolWeight'),
-            pieceWeight: document.getElementById('pieceWeight'),
-            timeHours: document.getElementById('timeHours'),
-            timeMinutes: document.getElementById('timeMinutes'),
-            powerWatts: document.getElementById('powerWatts'),
-            kwhCost: document.getElementById('kwhCost'),
-            extraCosts: document.getElementById('extraCosts'),
-            profitMargin: document.getElementById('profitMargin'),
-            filamentPreset: document.getElementById('filamentPreset')
-        };
-
-        const outputs = {
-            resTotalPrice: document.getElementById('resTotalPrice'),
-            resTotalCost: document.getElementById('resTotalCost'),
-            resProfit: document.getElementById('resProfit'),
-            resFilamentCost: document.getElementById('resFilamentCost'),
-            resEnergyCost: document.getElementById('resEnergyCost'),
-            resExtraCostDisplay: document.getElementById('resExtraCostDisplay'),
-            resCostPerGram: document.getElementById('resCostPerGram'),
-            resKwhUsed: document.getElementById('resKwhUsed'),
-            marginValueDisplay: document.getElementById('marginValueDisplay'),
-            barFilament: document.getElementById('barFilament'),
-            barEnergy: document.getElementById('barEnergy'),
-            barExtra: document.getElementById('barExtra')
-        };
-
-        function openAuthModal() {
-            document.getElementById('authModal').classList.remove('hidden');
-        }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-            document.getElementById('authErrorMsg').classList.add('hidden');
-        }
-
-        async function handleLogin() {
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-            const errorMsg = document.getElementById('authErrorMsg');
-
-            try {
-                await window.signInWithEmailAndPassword(window.fbAuth, email, password);
-                closeAuthModal();
-                showToast("Login realizado com sucesso!");
-            } catch (err) {
-                errorMsg.textContent = "Erro ao entrar: E-mail ou senha incorretos.";
-                errorMsg.classList.remove('hidden');
-            }
-        }
-
-        async function handleRegister() {
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-            const errorMsg = document.getElementById('authErrorMsg');
-
-            if (password.length < 6) {
-                errorMsg.textContent = "A senha deve ter pelo menos 6 caracteres.";
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-
-            try {
-                await window.createUserWithEmailAndPassword(window.fbAuth, email, password);
-                closeAuthModal();
-                showToast("Conta criada com sucesso!");
-            } catch (err) {
-                errorMsg.textContent = "Erro ao criar conta: E-mail já em uso ou inválido.";
-                errorMsg.classList.remove('hidden');
-            }
-        }
-
-        async function handleLogout() {
-            await window.signOut(window.fbAuth);
-            closeAuthModal();
-            showToast("Você saiu da conta.");
-        }
-
-        function startApp() {
-            lobbyScreen.classList.add('hidden');
-            appScreen.classList.remove('hidden');
-        }
-
-        function backToLobby() {
-            appScreen.classList.add('hidden');
-            lobbyScreen.classList.remove('hidden');
-        }
-
-        function formatMoney(val) {
-            return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function syncMarginSlider() {
-            outputs.marginValueDisplay.textContent = inputs.profitMargin.value + '%';
-        }
-
-        function applyFilamentPreset() {
-            const preset = inputs.filamentPreset.value;
-            if (preset === 'pla_standard') {
-                inputs.spoolPrice.value = 100.00;
-                inputs.spoolWeight.value = 1000;
-            } else if (preset === 'pla_premium') {
-                inputs.spoolPrice.value = 140.00;
-                inputs.spoolWeight.value = 1000;
-            } else if (preset === 'petg') {
-                inputs.spoolPrice.value = 120.00;
-                inputs.spoolWeight.value = 1000;
-            } else if (preset === 'abs') {
-                inputs.spoolPrice.value = 110.00;
-                inputs.spoolWeight.value = 1000;
-            } else if (preset === 'tpu') {
-                inputs.spoolPrice.value = 180.00;
-                inputs.spoolWeight.value = 800;
-            }
-            calculate();
-        }
-
-        function calculate() {
-            const spoolPrice = parseFloat(inputs.spoolPrice.value) || 0;
-            const spoolWeight = parseFloat(inputs.spoolWeight.value) || 0;
-            const pieceWeight = parseFloat(inputs.pieceWeight.value) || 0;
-
-            const hours = parseFloat(inputs.timeHours.value) || 0;
-            const minutes = parseFloat(inputs.timeMinutes.value) || 0;
-            const powerWatts = parseFloat(inputs.powerWatts.value) || 0;
-            const kwhCost = parseFloat(inputs.kwhCost.value) || 0;
-
-            const extraCosts = parseFloat(inputs.extraCosts.value) || 0;
-            const marginPercent = parseFloat(inputs.profitMargin.value) || 0;
-
-            const costPerGram = spoolWeight > 0 ? (spoolPrice / spoolWeight) : 0;
-            const filamentCost = costPerGram * pieceWeight;
-
-            const totalHours = hours + (minutes / 60);
-            const kwhUsed = (powerWatts / 1000) * totalHours;
-            const energyCost = kwhUsed * kwhCost;
-
-            const totalCost = filamentCost + energyCost + extraCosts;
-            const profit = totalCost * (marginPercent / 100);
-            const finalPrice = totalCost + profit;
-
-            outputs.resTotalPrice.textContent = formatMoney(finalPrice);
-            outputs.resTotalCost.textContent = formatMoney(totalCost);
-            outputs.resProfit.textContent = formatMoney(profit);
-
-            outputs.resFilamentCost.textContent = formatMoney(filamentCost);
-            outputs.resEnergyCost.textContent = formatMoney(energyCost);
-            outputs.resExtraCostDisplay.textContent = formatMoney(extraCosts);
-
-            outputs.resCostPerGram.textContent = costPerGram.toFixed(3);
-            outputs.resKwhUsed.textContent = kwhUsed.toFixed(2);
-
-            if (totalCost > 0) {
-                outputs.barFilament.style.width = ((filamentCost / totalCost) * 100) + '%';
-                outputs.barEnergy.style.width = ((energyCost / totalCost) * 100) + '%';
-                outputs.barExtra.style.width = ((extraCosts / totalCost) * 100) + '%';
-            } else {
-                outputs.barFilament.style.width = '33%';
-                outputs.barEnergy.style.width = '33%';
-                outputs.barExtra.style.width = '34%';
-            }
-        }
-
-        function buildSummaryText() {
-            const project = inputs.projectName.value.trim() || 'Impressão 3D';
-            const price = outputs.resTotalPrice.textContent;
-            const weight = inputs.pieceWeight.value || '0';
-            const hours = inputs.timeHours.value || '0';
-            const mins = inputs.timeMinutes.value || '0';
-
-            return `📦 *ORÇAMENTO DE IMPRESSÃO 3D*\n` +
-                   `────────────────────\n` +
-                   `🔹 *Item:* ${project}\n` +
-                   `🔹 *Peso estimado:* ${weight}g\n` +
-                   `🔹 *Tempo de produção:* ${hours}h ${mins}m\n` +
-                   `────────────────────\n` +
-                   `💰 *Valor Total:* R$ ${price}\n\n` +
-                   `_Orçamento gerado via 3D PrintCalc Pro_`;
-        }
-
-        function shareWhatsApp() {
-            const text = encodeURIComponent(buildSummaryText());
-            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-        }
-
-        function copySummary() {
-            const text = buildSummaryText();
-            navigator.clipboard.writeText(text).then(() => {
-                showToast("Orçamento copiado!");
-            });
-        }
-
         function showToast(msg) {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = msg;
+            document.getElementById('toastMessage').innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
+        }
+    </script>
+
+    <script>
+        lucide.createIcons();
+
+        function startApp() {
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function backToLobby() {
+            document.getElementById('appScreen').classList.add('hidden');
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function syncMarginSlider() {
+            const val = document.getElementById('profitMargin').value;
+            document.getElementById('marginValueDisplay').innerText = val + '%';
+        }
+
+        function applyFilamentPreset() {
+            const preset = document.getElementById('filamentPreset').value;
+            const priceInput = document.getElementById('spoolPrice');
+            const weightInput = document.getElementById('spoolWeight');
+
+            if (preset === 'pla_standard') { priceInput.value = 100; weightInput.value = 1000; }
+            else if (preset === 'pla_premium') { priceInput.value = 140; weightInput.value = 1000; }
+            else if (preset === 'petg') { priceInput.value = 120; weightInput.value = 1000; }
+            else if (preset === 'abs') { priceInput.value = 110; weightInput.value = 1000; }
+            else if (preset === 'tpu') { priceInput.value = 180; weightInput.value = 800; }
+            
+            calculate();
+        }
+
+        function calculate() {
+            const spoolPrice = parseFloat(document.getElementById('spoolPrice').value) || 0;
+            const spoolWeight = parseFloat(document.getElementById('spoolWeight').value) || 1;
+            const pieceWeight = parseFloat(document.getElementById('pieceWeight').value) || 0;
+            
+            const hours = parseFloat(document.getElementById('timeHours').value) || 0;
+            const minutes = parseFloat(document.getElementById('timeMinutes').value) || 0;
+            const totalHours = hours + (minutes / 60);
+            
+            const powerWatts = parseFloat(document.getElementById('powerWatts').value) || 0;
+            const kwhCost = parseFloat(document.getElementById('kwhCost').value) || 0;
+            const extraCosts = parseFloat(document.getElementById('extraCosts').value) || 0;
+            const profitMargin = parseFloat(document.getElementById('profitMargin').value) || 0;
+
+            const costPerGram = spoolWeight > 0 ? (spoolPrice / spoolWeight) : 0;
+            const filamentCost = costPerGram * pieceWeight;
+
+            const kwhUsed = (powerWatts * totalHours) / 1000;
+            const energyCost = kwhUsed * kwhCost;
+
+            const totalCost = filamentCost + energyCost + extraCosts;
+            const profit = totalCost * (profitMargin / 100);
+            const totalPrice = totalCost + profit;
+
+            document.getElementById('resTotalPrice').innerText = totalPrice.toFixed(2).replace('.', ',');
+            document.getElementById('resTotalCost').innerText = totalCost.toFixed(2).replace('.', ',');
+            document.getElementById('resProfit').innerText = profit.toFixed(2).replace('.', ',');
+            
+            document.getElementById('resFilamentCost').innerText = filamentCost.toFixed(2).replace('.', ',');
+            document.getElementById('resEnergyCost').innerText = energyCost.toFixed(2).replace('.', ',');
+            document.getElementById('resExtraCostDisplay').innerText = extraCosts.toFixed(2).replace('.', ',');
+            
+            document.getElementById('resCostPerGram').innerText = costPerGram.toFixed(4).replace('.', ',');
+            document.getElementById('resKwhUsed').innerText = kwhUsed.toFixed(3).replace('.', ',');
+
+            const sum = totalCost > 0 ? totalCost : 1;
+            const p1 = (filamentCost / sum) * 100;
+            const p2 = (energyCost / sum) * 100;
+            const p3 = (extraCosts / sum) * 100;
+
+            document.getElementById('barFilament').style.width = p1 + '%';
+            document.getElementById('barEnergy').style.width = p2 + '%';
+            document.getElementById('barExtra').style.width = p3 + '%';
+        }
+
+        function getSummaryText() {
+            const name = document.getElementById('projectName').value || 'Peça em Impressão 3D';
+            const total = document.getElementById('resTotalPrice').innerText;
+            return `*Orçamento - ${name}*\n\n💰 *Preço Sugerido:* R$ ${total}\n\nGerado via 3D PrintCalc Pro.`;
+        }
+
+        function shareWhatsApp() {
+            const text = encodeURIComponent(getSummaryText());
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        function copySummary() {
+            navigator.clipboard.writeText(getSummaryText());
+            showToast("Orçamento copiado para a área de transferência!");
         }
     </script>
 </body>
