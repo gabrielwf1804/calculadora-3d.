@@ -123,11 +123,15 @@
                 </div>
             </div>
 
-            <div class="pt-2">
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button onclick="startApp()" class="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-lg shadow-lg shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer">
                     <i data-lucide="play" class="w-5 h-5 fill-slate-950"></i>
                     Iniciar Calculadora
                 </button>
+                <a href="https://pay.kiwify.com.br/n7HpJum" target="_blank" class="inline-flex items-center gap-2 px-6 py-4 rounded-xl bg-amber-500/10 border border-amber-500/40 hover:bg-amber-500/20 text-amber-300 font-bold text-base transition-all hover:scale-105 active:scale-95">
+                    <i data-lucide="crown" class="w-5 h-5 text-amber-400"></i>
+                    Assinar Versão PRO
+                </a>
             </div>
         </div>
     </section>
@@ -153,6 +157,10 @@
                 </div>
                 
                 <div class="flex items-center gap-2">
+                    <a href="https://pay.kiwify.com.br/n7HpJum" target="_blank" class="text-xs px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition">
+                        <i data-lucide="crown" class="w-4 h-4"></i>
+                        <span>Seja PRO</span>
+                    </a>
                     <button id="btnSaveDefaults" onclick="saveDefaults()" class="text-xs px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 border border-slate-700 transition">
                         <i data-lucide="save" class="w-4 h-4 text-cyan-400"></i>
                         <span class="hidden sm:inline">Salvar Padrões</span>
@@ -187,11 +195,31 @@
                         </div>
                     </div>
 
-                    <!-- 1. Filamento -->
+                    <!-- 1. Filamento e Biblioteca PRO -->
                     <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
-                        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800">
-                            <i data-lucide="disc" class="w-5 h-5 text-cyan-400"></i>
-                            <h2 class="font-semibold text-slate-100">1. Filamento & Peça</h2>
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="disc" class="w-5 h-5 text-cyan-400"></i>
+                                <h2 class="font-semibold text-slate-100">1. Filamento & Peça</h2>
+                            </div>
+                            <span class="text-[10px] bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <i data-lucide="crown" class="w-3 h-3"></i> Biblioteca PRO
+                            </span>
+                        </div>
+
+                        <!-- Menu de Seleção Rápida de Filamento -->
+                        <div class="mb-4 p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                                Seletor Rápido de Material
+                            </label>
+                            <select id="filamentPreset" onchange="applyFilamentPreset()" class="glass-input w-full rounded-xl px-3 py-2 text-sm text-slate-200 bg-slate-900 border-slate-700">
+                                <option value="custom">✏️ Personalizado (Digitar valores)</option>
+                                <option value="pla_standard">🧵 PLA Padrão (R$ 100,00 - 1000g)</option>
+                                <option value="pla_premium">✨ PLA Premium / Silk (R$ 140,00 - 1000g)</option>
+                                <option value="petg">🛡️ PETG (R$ 120,00 - 1000g)</option>
+                                <option value="abs">🔥 ABS / ASA (R$ 110,00 - 1000g)</option>
+                                <option value="tpu">🌀 TPU Flexível (R$ 180,00 - 800g)</option>
+                            </select>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,7 +445,9 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             lucide.createIcons();
-        }); if ('serviceWorker' in navigator) {
+        });
+
+        if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('Service Worker registrado com sucesso!', reg))
@@ -438,7 +468,8 @@
             powerWatts: document.getElementById('powerWatts'),
             kwhCost: document.getElementById('kwhCost'),
             extraCosts: document.getElementById('extraCosts'),
-            profitMargin: document.getElementById('profitMargin')
+            profitMargin: document.getElementById('profitMargin'),
+            filamentPreset: document.getElementById('filamentPreset')
         };
 
         const outputs = {
@@ -473,6 +504,27 @@
 
         function syncMarginSlider() {
             outputs.marginValueDisplay.textContent = inputs.profitMargin.value + '%';
+        }
+
+        function applyFilamentPreset() {
+            const preset = inputs.filamentPreset.value;
+            if (preset === 'pla_standard') {
+                inputs.spoolPrice.value = 100.00;
+                inputs.spoolWeight.value = 1000;
+            } else if (preset === 'pla_premium') {
+                inputs.spoolPrice.value = 140.00;
+                inputs.spoolWeight.value = 1000;
+            } else if (preset === 'petg') {
+                inputs.spoolPrice.value = 120.00;
+                inputs.spoolWeight.value = 1000;
+            } else if (preset === 'abs') {
+                inputs.spoolPrice.value = 110.00;
+                inputs.spoolWeight.value = 1000;
+            } else if (preset === 'tpu') {
+                inputs.spoolPrice.value = 180.00;
+                inputs.spoolWeight.value = 800;
+            }
+            calculate();
         }
 
         function calculate() {
@@ -556,44 +608,47 @@
                 spoolWeight: inputs.spoolWeight.value,
                 powerWatts: inputs.powerWatts.value,
                 kwhCost: inputs.kwhCost.value,
+                extraCosts: inputs.extraCosts.value,
                 profitMargin: inputs.profitMargin.value
             };
-            localStorage.setItem('3d_calc_defaults', JSON.stringify(defaults));
-            showToast("Padrões salvos!");
+            localStorage.setItem('3dcalc_defaults', JSON.stringify(defaults));
+            showToast("Valores padrão salvos com sucesso!");
         }
 
         function loadSavedDefaults() {
-            const saved = localStorage.getItem('3d_calc_defaults');
+            const saved = localStorage.getItem('3dcalc_defaults');
             if (saved) {
-                try {
-                    const defaults = JSON.parse(saved);
-                    if (defaults.spoolPrice) inputs.spoolPrice.value = defaults.spoolPrice;
-                    if (defaults.spoolWeight) inputs.spoolWeight.value = defaults.spoolWeight;
-                    if (defaults.powerWatts) inputs.powerWatts.value = defaults.powerWatts;
-                    if (defaults.kwhCost) inputs.kwhCost.value = defaults.kwhCost;
-                    if (defaults.profitMargin) inputs.profitMargin.value = defaults.profitMargin;
-                } catch (e) {
-                    console.error("Erro ao carregar padrões", e);
+                const defaults = JSON.parse(saved);
+                if (defaults.spoolPrice) inputs.spoolPrice.value = defaults.spoolPrice;
+                if (defaults.spoolWeight) inputs.spoolWeight.value = defaults.spoolWeight;
+                if (defaults.powerWatts) inputs.powerWatts.value = defaults.powerWatts;
+                if (defaults.kwhCost) inputs.kwhCost.value = defaults.kwhCost;
+                if (defaults.extraCosts) inputs.extraCosts.value = defaults.extraCosts;
+                if (defaults.profitMargin) {
+                    inputs.profitMargin.value = defaults.profitMargin;
+                    syncMarginSlider();
                 }
+                calculate();
             }
-            syncMarginSlider();
-            calculate();
         }
 
         function resetForm() {
-            Object.values(inputs).forEach(input => input.value = '');
-            inputs.profitMargin.value = 0;
-            syncMarginSlider();
+            inputs.projectName.value = '';
+            inputs.pieceWeight.value = '';
+            inputs.timeHours.value = '';
+            inputs.timeMinutes.value = '';
             calculate();
-            showToast("Campos limpos!");
+            showToast("Formulário limpo!");
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMessage').textContent = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
         }
     </script>
 </body>
-</html> 
+</html>
