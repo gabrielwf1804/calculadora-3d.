@@ -157,18 +157,16 @@
                 </div>
                 
                 <div class="flex items-center gap-2">
-                    <a href="https://pay.kiwify.com.br/n7HpJum" target="_blank" class="text-xs px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition">
+                    <!-- STATUS CONTA / LOGIN -->
+                    <button id="userAuthBtn" onclick="openAuthModal()" class="text-xs px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1.5 border border-slate-700 transition cursor-pointer">
+                        <i data-lucide="user" class="w-4 h-4 text-cyan-400"></i>
+                        <span id="userAuthText">Entrar</span>
+                    </button>
+
+                    <a href="https://pay.kiwify.com.br/n7HpJum" target="_blank" id="proHeaderBtn" class="text-xs px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition">
                         <i data-lucide="crown" class="w-4 h-4"></i>
                         <span>Seja PRO</span>
                     </a>
-                    <button id="btnSaveDefaults" onclick="saveDefaults()" class="text-xs px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-2 border border-slate-700 transition">
-                        <i data-lucide="save" class="w-4 h-4 text-cyan-400"></i>
-                        <span class="hidden sm:inline">Salvar Padrões</span>
-                    </button>
-                    <button id="btnReset" onclick="resetForm()" class="text-xs px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-red-950/50 hover:text-red-400 text-slate-400 flex items-center gap-1.5 border border-slate-800 transition">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        <span class="hidden sm:inline">Limpar</span>
-                    </button>
                 </div>
             </div>
         </header>
@@ -207,10 +205,26 @@
                             </span>
                         </div>
 
-                        <!-- Menu de Seleção Rápida de Filamento -->
-                        <div class="mb-4 p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                                Seletor Rápido de Material
+                        <!-- CARD BLOQUEADO DE RECURSO PRO -->
+                        <div id="proLockedCard" class="mb-4 p-4 bg-amber-950/20 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
+                                    <i data-lucide="lock" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Biblioteca de Filamentos Bloqueada</h4>
+                                    <p class="text-[11px] text-slate-400">Faça login com uma conta PRO para acessar perfis prontos.</p>
+                                </div>
+                            </div>
+                            <a href="https://pay.kiwify.com.br/n7HpJum" target="_blank" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs rounded-lg transition shadow-md shadow-amber-500/20 text-center whitespace-nowrap">
+                                Assinar PRO
+                            </a>
+                        </div>
+
+                        <!-- Menu de Seleção Rápida (LIBERADO APENAS PARA PRO) -->
+                        <div id="proUnlockedCard" class="hidden mb-4 p-3 bg-slate-900/60 rounded-xl border border-emerald-500/30">
+                            <label class="block text-xs font-semibold text-emerald-400 mb-1.5 flex items-center gap-1.5">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> Seletor Rápido de Material (PRO Ativo)
                             </label>
                             <select id="filamentPreset" onchange="applyFilamentPreset()" class="glass-input w-full rounded-xl px-3 py-2 text-sm text-slate-200 bg-slate-900 border-slate-700">
                                 <option value="custom">✏️ Personalizado (Digitar valores)</option>
@@ -442,6 +456,135 @@
         </main>
     </div>
 
+    <!-- MODAL DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
+    <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-cyan-500/30 relative space-y-5">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <!-- CONTEÚDO QUANDO NÃO LOGADO -->
+            <div id="authLoggedOutView" class="space-y-4">
+                <div class="text-center space-y-1">
+                    <h3 class="text-xl font-bold text-white">Minha Conta</h3>
+                    <p class="text-xs text-slate-400">Entre para sincronizar sua assinatura PRO</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">E-mail</label>
+                        <input type="email" id="authEmail" placeholder="seu@email.com" class="glass-input w-full rounded-xl px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Senha</label>
+                        <input type="password" id="authPassword" placeholder="••••••••" class="glass-input w-full rounded-xl px-3 py-2 text-sm text-white">
+                    </div>
+                    <p id="authErrorMsg" class="text-xs text-red-400 hidden"></p>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="handleLogin()" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl transition cursor-pointer">
+                        Entrar
+                    </button>
+                    <button onclick="handleRegister()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                        Criar Conta
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTEÚDO QUANDO LOGADO -->
+            <div id="authLoggedInView" class="space-y-4 hidden text-center">
+                <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl text-cyan-400 inline-block">
+                    <i data-lucide="user-check" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h3 id="userDisplayEmail" class="text-sm font-bold text-white">usuario@email.com</h3>
+                    <p id="userDisplayStatus" class="text-xs text-slate-400 mt-0.5">Plano: Gratuito</p>
+                </div>
+                <button onclick="handleLogout()" class="w-full py-2 bg-slate-800 hover:bg-red-950/50 hover:text-red-400 text-slate-300 font-semibold text-xs rounded-xl border border-slate-700 transition cursor-pointer">
+                    Sair da Conta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-efUhhxdVTGVJGYVgVcvjFYF4EEewkJM",
+            authDomain: "calculadora3d-pro.firebaseapp.com",
+            projectId: "calculadora3d-pro",
+            storageBucket: "calculadora3d-pro.firebasestorage.app",
+            messagingSenderId: "1036847414327",
+            appId: "1:1036847414327:web:5c1aba86d44e117252d3b2",
+            measurementId: "G-YFL4WSXC4T"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.fbAuth = auth;
+        window.fbDb = db;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.signOut = signOut;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+
+        onAuthStateChanged(auth, async (user) => {
+            const userAuthText = document.getElementById('userAuthText');
+            const loggedOutView = document.getElementById('authLoggedOutView');
+            const loggedInView = document.getElementById('authLoggedInView');
+            const userDisplayEmail = document.getElementById('userDisplayEmail');
+            const userDisplayStatus = document.getElementById('userDisplayStatus');
+            const lockedCard = document.getElementById('proLockedCard');
+            const unlockedCard = document.getElementById('proUnlockedCard');
+
+            if (user) {
+                userAuthText.textContent = user.email.split('@')[0];
+                loggedOutView.classList.add('hidden');
+                loggedInView.classList.remove('hidden');
+                userDisplayEmail.textContent = user.email;
+
+                // Verificar status no Firestore
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                let isPro = false;
+                if (userDocSnap.exists()) {
+                    isPro = userDocSnap.data().isPro === true;
+                } else {
+                    // Criar registro inicial do usuário
+                    await setDoc(userDocRef, { email: user.email, isPro: false, createdAt: new Date() });
+                }
+
+                if (isPro) {
+                    userDisplayStatus.textContent = "Plano: PRO (Ativo ⭐)";
+                    userDisplayStatus.className = "text-xs text-amber-400 font-bold mt-0.5";
+                    lockedCard.classList.add('hidden');
+                    unlockedCard.classList.remove('hidden');
+                } else {
+                    userDisplayStatus.textContent = "Plano: Gratuito";
+                    userDisplayStatus.className = "text-xs text-slate-400 mt-0.5";
+                    lockedCard.classList.remove('hidden');
+                    unlockedCard.classList.add('hidden');
+                }
+            } else {
+                userAuthText.textContent = "Entrar";
+                loggedOutView.classList.remove('hidden');
+                loggedInView.classList.add('hidden');
+                lockedCard.classList.remove('hidden');
+                unlockedCard.classList.add('hidden');
+            }
+        });
+    </script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             lucide.createIcons();
@@ -487,10 +630,60 @@
             barExtra: document.getElementById('barExtra')
         };
 
+        function openAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('authErrorMsg').classList.add('hidden');
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const errorMsg = document.getElementById('authErrorMsg');
+
+            try {
+                await window.signInWithEmailAndPassword(window.fbAuth, email, password);
+                closeAuthModal();
+                showToast("Login realizado com sucesso!");
+            } catch (err) {
+                errorMsg.textContent = "Erro ao entrar: E-mail ou senha incorretos.";
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        async function handleRegister() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const errorMsg = document.getElementById('authErrorMsg');
+
+            if (password.length < 6) {
+                errorMsg.textContent = "A senha deve ter pelo menos 6 caracteres.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                await window.createUserWithEmailAndPassword(window.fbAuth, email, password);
+                closeAuthModal();
+                showToast("Conta criada com sucesso!");
+            } catch (err) {
+                errorMsg.textContent = "Erro ao criar conta: E-mail já em uso ou inválido.";
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        async function handleLogout() {
+            await window.signOut(window.fbAuth);
+            closeAuthModal();
+            showToast("Você saiu da conta.");
+        }
+
         function startApp() {
             lobbyScreen.classList.add('hidden');
             appScreen.classList.remove('hidden');
-            loadSavedDefaults();
         }
 
         function backToLobby() {
@@ -600,45 +793,6 @@
             navigator.clipboard.writeText(text).then(() => {
                 showToast("Orçamento copiado!");
             });
-        }
-
-        function saveDefaults() {
-            const defaults = {
-                spoolPrice: inputs.spoolPrice.value,
-                spoolWeight: inputs.spoolWeight.value,
-                powerWatts: inputs.powerWatts.value,
-                kwhCost: inputs.kwhCost.value,
-                extraCosts: inputs.extraCosts.value,
-                profitMargin: inputs.profitMargin.value
-            };
-            localStorage.setItem('3dcalc_defaults', JSON.stringify(defaults));
-            showToast("Valores padrão salvos com sucesso!");
-        }
-
-        function loadSavedDefaults() {
-            const saved = localStorage.getItem('3dcalc_defaults');
-            if (saved) {
-                const defaults = JSON.parse(saved);
-                if (defaults.spoolPrice) inputs.spoolPrice.value = defaults.spoolPrice;
-                if (defaults.spoolWeight) inputs.spoolWeight.value = defaults.spoolWeight;
-                if (defaults.powerWatts) inputs.powerWatts.value = defaults.powerWatts;
-                if (defaults.kwhCost) inputs.kwhCost.value = defaults.kwhCost;
-                if (defaults.extraCosts) inputs.extraCosts.value = defaults.extraCosts;
-                if (defaults.profitMargin) {
-                    inputs.profitMargin.value = defaults.profitMargin;
-                    syncMarginSlider();
-                }
-                calculate();
-            }
-        }
-
-        function resetForm() {
-            inputs.projectName.value = '';
-            inputs.pieceWeight.value = '';
-            inputs.timeHours.value = '';
-            inputs.timeMinutes.value = '';
-            calculate();
-            showToast("Formulário limpo!");
         }
 
         function showToast(msg) {
